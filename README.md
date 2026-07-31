@@ -26,9 +26,9 @@ Run the full pipeline:
 .venv\Scripts\python.exe pipeline.py
 ```
 
-Outputs: `results/tables/pipeline_results.json` and console metrics for validation and test splits.
+Outputs (local, not in git): `results/tables/pipeline_results.json` and console metrics.
 
-Essay figures (PNG): see **`results/figures/CONTENTS.md`**. Regenerate with:
+Essay figures (local): `results/figures/` — index in `CONTENTS.md`, regenerate with:
 
 ```bash
 .venv\Scripts\python.exe scripts\generate_figures.py
@@ -41,7 +41,7 @@ Essay figures (PNG): see **`results/figures/CONTENTS.md`**. Regenerate with:
 | `pipeline.py` | Single entry point — splits, MFCCs, train, deferral eval |
 | `src/` | Modules: paths, splits, audio features, deferral metrics |
 | `requirements.txt` | Pinned dependencies |
-| `results/tables/` | Committed metrics JSON (reproducibility check) |
+| `scripts/generate_figures.py` | Optional: build essay PNGs into local `results/figures/` |
 
 ## Method summary
 

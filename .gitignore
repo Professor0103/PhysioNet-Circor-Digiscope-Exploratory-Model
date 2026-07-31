@@ -36,9 +36,7 @@ docs/essay_context_for_claude.md
 notebooks/kernel-metadata.json
 notebooks/circor-training.ipynb
 
-# --- Essay figures (generate locally; not pushed to GitHub)
-results/figures/*.png
+# --- Generated outputs (local only — regenerate via pipeline.py / scripts/)
+results/
 
-# NOTE: results/tables/ IS committed (pipeline_results.json for verification).
-# NOTE: results/figures/CONTENTS.md + scripts/generate_figures.py ARE committed.
-# NOTE: pipeline.py and src/ ARE committed (public portfolio code).
+# NOTE: pipeline.py, src/, and scripts/ ARE committed (public portfolio code).
