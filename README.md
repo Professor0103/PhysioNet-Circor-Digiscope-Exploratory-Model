@@ -26,14 +26,6 @@ Run the full pipeline:
 .venv\Scripts\python.exe pipeline.py
 ```
 
-Outputs (local, not in git): `results/tables/pipeline_results.json` and console metrics.
-
-Essay figures (local): `results/figures/` — index in `CONTENTS.md`, regenerate with:
-
-```bash
-.venv\Scripts\python.exe scripts\generate_figures.py
-```
-
 ## Repository layout (public)
 
 | Path | Purpose |
