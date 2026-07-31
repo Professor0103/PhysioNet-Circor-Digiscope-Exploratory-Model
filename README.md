@@ -28,6 +28,12 @@ Run the full pipeline:
 
 Outputs: `results/tables/pipeline_results.json` and console metrics for validation and test splits.
 
+Essay figures (PNG): see **`results/figures/CONTENTS.md`**. Regenerate with:
+
+```bash
+.venv\Scripts\python.exe scripts\generate_figures.py
+```
+
 ## Repository layout (public)
 
 | Path | Purpose |
