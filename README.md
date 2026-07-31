@@ -1,4 +1,5 @@
 # When Should an AI Stethoscope Ask for Help?
+Work completed for my medical school's Arkell Prize in Congenital Heart Disease
 
 Uncertainty-aware **decision support** for paediatric heart-sound screening using the [CirCor DigiScope](https://physionet.org/content/circor-heart-sound/1.0.3/) dataset (v1.0.3).
 
@@ -52,10 +53,6 @@ Outputs: `results/tables/pipeline_results.json` and console metrics for validati
 | Forced (≥ 0.5) | 0.676 | 51 (all recordings) | 0 | 100% |
 | Deferral (0.35/0.65) | 0.676 | 19 (among auto only) | 219 | 53% |
 
-## Local development
-
-Exploratory notebooks and learning logs live under `notebooks/` and `docs/` but are **gitignored** — not required to reproduce results.
-
 ## Licence & data
 
-Use CirCor under its PhysioNet terms. Do not commit raw audio to this repository.
+Use CirCor under its PhysioNet terms. Raw audio not committed to this repository.
