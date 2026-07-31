@@ -1,0 +1,40 @@
+# --- Data: never commit. Raw audio and derived features are large and are
+# --- redistributable only under the dataset's own licence.
+data/
+
+# --- Trained models and generated features (regenerate via pipeline.py)
+models/
+*.joblib
+*.pkl
+*.pt
+
+# --- Python environment
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# --- Notebook checkpoints
+.ipynb_checkpoints/
+
+# --- Credentials
+kaggle.json
+.env
+
+# --- Local learning & draft materials (keep on disk, not on GitHub)
+notebooks/
+Documentations/
+insights/
+.cursor/
+
+docs/learning_log.md
+docs/experiment_log.md
+docs/ai_assistance_log.md
+docs/essay_context_for_claude.md
+
+# --- Kaggle kernel metadata (optional local)
+notebooks/kernel-metadata.json
+notebooks/circor-training.ipynb
+
+# NOTE: results/tables/ IS committed (pipeline_results.json for verification).
+# NOTE: pipeline.py and src/ ARE committed (public portfolio code).

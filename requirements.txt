@@ -1,0 +1,24 @@
+# Direct dependencies only, pinned to the versions actually verified working
+# on Python 3.14.3 (Windows) on 2026-07-30. Transitive dependencies are
+# resolved by pip; run `pip freeze > requirements-lock.txt` if you ever need
+# the exact full tree.
+#
+# Install with:
+#   .venv\Scripts\python.exe -m pip install -r requirements.txt
+
+pandas==3.0.5
+numpy==2.4.6
+scipy==1.18.0
+scikit-learn==1.9.0
+
+matplotlib==3.11.1
+seaborn==0.13.2
+
+librosa==0.11.0
+soundfile==0.14.0
+
+pytest==9.1.1
+ipykernel==7.3.0
+
+# PyTorch is deliberately NOT listed. It is needed only for the optional
+# Stage 10 CNN. Adding it now would be an unnecessary dependency.
