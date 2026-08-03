@@ -29,8 +29,6 @@ insights/
 
 docs/learning_log.md
 docs/experiment_log.md
-docs/ai_assistance_log.md
-docs/essay_context_for_claude.md
 
 # --- Kaggle kernel metadata (optional local)
 notebooks/kernel-metadata.json
@@ -39,4 +37,4 @@ notebooks/circor-training.ipynb
 # --- Generated outputs (local only — regenerate via pipeline.py / scripts/)
 results/
 
-# NOTE: pipeline.py, src/, and scripts/ ARE committed (public portfolio code).
+
