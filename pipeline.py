@@ -1,8 +1,5 @@
 """
-CirCor heart-sound screening pipeline — portfolio entry point.
-
-Runs patient splits, MFCC extraction, murmur classification, and deferral evaluation.
-Thresholds (0.35 / 0.65) were selected on validation; test evaluation is confirmatory.
+CirCor heart-sound screening pipeline
 
 Usage:
     python pipeline.py              # full run 
