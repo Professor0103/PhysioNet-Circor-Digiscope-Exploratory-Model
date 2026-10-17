@@ -65,21 +65,39 @@ FLOW_STAGE = "#dcedf9"
 def _flow_box(ax, x0, y0, x1, y1, heading, body, fill=FLOW_FILL) -> None:
     ax.add_patch(mpatches.FancyBboxPatch(
         (x0, y0), x1 - x0, y1 - y0, boxstyle="round,pad=0.4,rounding_size=1.2",
-        facecolor=fill, edgecolor=C_INK, linewidth=1.2, zorder=2,
+        facecolor=fill, edgecolor=C_INK, linewidth=1.2, zorder=2, clip_on=False,
     ))
-    cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
+    cx = (x0 + x1) / 2
+    box_h, box_w = y1 - y0, x1 - x0
+    pad = max(0.55, box_h * 0.07)
+    y_lo, y_hi = y0 + pad, y1 - pad
+
     if not body:
-        ax.text(cx, cy, heading, ha="center", va="center",
-                fontsize=9.5, fontweight="bold", color=C_INK, zorder=3)
+        ax.text(cx, (y_lo + y_hi) / 2, heading, ha="center", va="center",
+                fontsize=9.5, fontweight="bold", color=C_INK, zorder=3, clip_on=True)
         return
 
-    h_head, gap, line_h = 3.3, 1.1, 2.9
-    h_body = (body.count("\n") + 1) * line_h
-    top = cy + (h_head + gap + h_body) / 2
-    ax.text(cx, top - h_head / 2, heading, ha="center", va="center",
-            fontsize=9.5, fontweight="bold", color=C_INK, zorder=3)
-    ax.text(cx, top - h_head - gap - h_body / 2, body, ha="center", va="center",
-            fontsize=8.5, color=C_INK, linespacing=1.45, zorder=3)
+    n_body = body.count("\n") + 1
+    head_frac = 0.24 if n_body <= 2 else 0.20
+    if box_h < 12:
+        head_size, body_size = 8.5, 7.6
+        head_frac = 0.19
+    else:
+        head_size, body_size = 9.5, 8.5
+    if box_w < 34:
+        head_size = max(7.8, head_size - 0.7)
+        body_size = max(7.2, body_size - 0.5)
+
+    avail = y_hi - y_lo
+    head_band = avail * head_frac
+    body_band = avail - head_band
+    head_y = y_hi - head_band / 2
+    body_y = y_lo + body_band / 2
+
+    ax.text(cx, head_y, heading, ha="center", va="center",
+            fontsize=head_size, fontweight="bold", color=C_INK, zorder=3, clip_on=True)
+    ax.text(cx, body_y, body, ha="center", va="center",
+            fontsize=body_size, color=C_INK, linespacing=1.22, zorder=3, clip_on=True)
 
 
 def _flow_arrow(ax, x0, y0, x1, y1, style="-|>") -> None:
@@ -114,20 +132,20 @@ def fig01_pipeline_flowchart() -> None:
     cols = [(1, 32), (34, 66), (68, 99)]
 
     _flow_box(ax, mx0, 90, mx1, 99.5, "CirCor DigiScope Phonocardiogram v1.0.3",
-              f"{n_all} patients · {n_rec_all} recordings")
+              f"{n_all} patients, {n_rec_all} recordings")
 
     _flow_arrow(ax, 50, 90, 50, 82)
     _flow_arrow(ax, 50, 86.5, 79, 86.5)
     _flow_box(ax, 80, 82.5, 100, 90.5, "Excluded",
-              f"Murmur “Unknown”\n({n_excl} patients)", fill=FLOW_EXCL)
+              f"Unknown murmur label\n{n_excl} patients", fill=FLOW_EXCL)
 
     _flow_box(ax, mx0, 73.5, mx1, 82, "Modelling cohort",
               f"{n_cohort} patients")
     _flow_arrow(ax, 50, 73.5, 50, 66)
 
     _flow_box(ax, mx0 - 8, 54.5, mx1 + 8, 66, "Patient-level split (70 / 15 / 15)",
-              "Repeat visits linked by “Additional ID” and kept together\n"
-              "Stratified by clinical outcome · random seed 42")
+              "Every recording from one patient\nstays in the same split\n"
+              "Groups balanced by outcome")
 
     centres = [(x0 + x1) / 2 for x0, x1 in cols]
     ax.plot([50, 50], [54.5, 51.5], color=C_INK, lw=1.5, zorder=1)
@@ -138,29 +156,32 @@ def fig01_pipeline_flowchart() -> None:
         _flow_box(ax, x0, 37.5, x1, 48, f"{name} ({pct})",
                   f"{frame['Patient ID'].nunique()} patients\n{len(frame)} recordings",
                   fill=FLOW_STAGE)
-        _flow_arrow(ax, cx, 37.5, cx, 33)
+        _flow_arrow(ax, cx, 37.5, cx, 34)
 
-    _flow_box(ax, cols[0][0], 23.5, cols[-1][1], 33, "Feature extraction",
-              f"Each recording loaded at 4000 Hz · {len(mfcc_cols) // 2} MFCCs "
-              f"summarised by temporal mean and SD\n"
-              f"= {len(mfcc_cols)} features per recording")
+    feat_y0 = 21.0
+    _flow_box(ax, cols[0][0], feat_y0, cols[-1][1], 34, "Feature extraction",
+              f"Audio at 4000 Hz\n{len(mfcc_cols) // 2} MFCCs per recording\n"
+              f"Mean and SD over time ({len(mfcc_cols)} inputs)")
 
     uses = [
-        ("Fit model", "Logistic regression,\nbalanced class weights;\n"
-                      "standardisation fitted\non training data only"),
-        ("Select thresholds", "Deferral band\n0.35 / 0.65 chosen under\n"
-                              "a ≥ 50% coverage floor;\ncalibration assessed"),
-        ("Confirm, once", "Locked thresholds applied\nto held-out data;\n"
-                          "forced 0.5 rule vs deferral"),
+        ("Train murmur model", "Logistic regression\nClass weights balanced\n"
+                               "Scaling learned on train only"),
+        ("Choose deferral band", "Review if prob 0.35 to 0.65\n"
+                                  "Validation split only\n"
+                                  "At least half auto-decided"),
+        ("Locked test", "Same 0.35 / 0.65 thresholds\n"
+                        "No further tuning\n"
+                        "Compare with fixed 0.5 cutoff"),
     ]
+    bot_y1 = 19.0
     for (x0, x1), (head, body) in zip(cols, uses):
-        _flow_arrow(ax, (x0 + x1) / 2, 23.5, (x0 + x1) / 2, 17.5)
-        _flow_box(ax, x0, 1, x1, 17.5, head, body, fill=FLOW_STAGE)
+        _flow_arrow(ax, (x0 + x1) / 2, feat_y0, (x0 + x1) / 2, bot_y1)
+        _flow_box(ax, x0, 0.5, x1, bot_y1, head, body, fill=FLOW_STAGE)
 
     for (xa, xb), label in (((cols[0][1], cols[1][0]), "model"),
                             ((cols[1][1], cols[2][0]), "thresholds")):
-        _flow_arrow(ax, xa, 9.25, xb, 9.25)
-        ax.text((xa + xb) / 2, 10.6, label, ha="center", va="bottom", rotation=90,
+        _flow_arrow(ax, xa, 10.0, xb, 10.0)
+        ax.text((xa + xb) / 2, 11.2, label, ha="center", va="bottom", rotation=90,
                 fontsize=7.5, style="italic", color=C_INK, zorder=4)
 
     ax.set_title("Study pipeline", fontsize=12.5, fontweight="bold", pad=12)
