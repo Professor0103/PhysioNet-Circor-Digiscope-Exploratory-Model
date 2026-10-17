@@ -1,5 +1,5 @@
-#!/usr/bin/env python3
-"""Generate essay figures into results/figures/. Run from project root:
+
+"""To generate figures into results/figures/. Run from project root:
 
     .venv\\Scripts\\python.exe scripts/generate_figures.py
 """
@@ -36,15 +36,13 @@ from src.audio import mfcc_summary, wav_paths_for_patient
 FIG_DIR = PROJECT_ROOT / "results" / "figures"
 T_LOW, T_HIGH = 0.35, 0.65
 
-# Categorical hues, validated for colour-vision deficiency (worst adjacent pair
-# ΔE 15.3 deutan / 20.8 normal vision). The previous red/amber/amber/green set
-# failed: the two ambers were indistinguishable (ΔE 8.0 in normal vision).
+
 C_MISS = "#e34948"   # automated false negative
 C_DEFER = "#eda100"  # deferred to human review
 C_CATCH = "#008300"  # automated true positive
 C_INK = "#333333"
-C_LINE = "#2a78d6"   # single-series line
-SEQ_CMAP = "Blues"   # one sequential hue everywhere magnitude is encoded
+C_LINE = "#2a78d6"
+SEQ_CMAP = "Blues" 
 
 sns.set_theme(style="whitegrid", font_scale=1.05)
 
@@ -59,36 +57,113 @@ def save(name: str, pad: float = 0.08) -> Path:
     return path
 
 
+FLOW_FILL = "#e8f4fc"
+FLOW_EXCL = "#f2f0ec"   
+FLOW_STAGE = "#dcedf9"
+
+
+def _flow_box(ax, x0, y0, x1, y1, heading, body, fill=FLOW_FILL) -> None:
+    ax.add_patch(mpatches.FancyBboxPatch(
+        (x0, y0), x1 - x0, y1 - y0, boxstyle="round,pad=0.4,rounding_size=1.2",
+        facecolor=fill, edgecolor=C_INK, linewidth=1.2, zorder=2,
+    ))
+    cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
+    if not body:
+        ax.text(cx, cy, heading, ha="center", va="center",
+                fontsize=9.5, fontweight="bold", color=C_INK, zorder=3)
+        return
+
+    h_head, gap, line_h = 3.3, 1.1, 2.9
+    h_body = (body.count("\n") + 1) * line_h
+    top = cy + (h_head + gap + h_body) / 2
+    ax.text(cx, top - h_head / 2, heading, ha="center", va="center",
+            fontsize=9.5, fontweight="bold", color=C_INK, zorder=3)
+    ax.text(cx, top - h_head - gap - h_body / 2, body, ha="center", va="center",
+            fontsize=8.5, color=C_INK, linespacing=1.45, zorder=3)
+
+
+def _flow_arrow(ax, x0, y0, x1, y1, style="-|>") -> None:
+    ax.annotate("", xy=(x1, y1), xytext=(x0, y0),
+                arrowprops=dict(arrowstyle=style, lw=1.5, color=C_INK,
+                                shrinkA=0, shrinkB=0), zorder=1)
+
+
 def fig01_pipeline_flowchart() -> None:
-    """Study pipeline — matches pipeline.py stages."""
-    fig, ax = plt.subplots(figsize=(11, 2.4))
-    ax.set_xlim(0, 11.3)
-    ax.set_ylim(0, 1)
+    """Study flow diagram."""
+    raw = load_training_table()
+    cohort = load_modelling_cohort(exclude_unknown_murmur=True)
+    n_all, n_cohort = len(raw), cohort["Patient ID"].nunique()
+    n_excl = n_all - n_cohort
+
+    feat_train, feat_val, mfcc_cols = load_mfcc_features()
+    feat_test = pd.read_csv(PROCESSED_DIR / "mfcc_features_test.csv")
+    n_rec_all = 3163 
+    splits = {
+        "Training": (feat_train, "70%"),
+        "Validation": (feat_val, "15%"),
+        "Test": (feat_test, "15%"),
+    }
+
+    fig, ax = plt.subplots(figsize=(8.6, 9.4))
+    ax.set_xlim(-2, 102)      
+    ax.set_ylim(-2, 102)
     ax.axis("off")
-    steps = [
-        "CirCor data",
-        "Patient splits",
-        "MFCC features",
-        "Train LR",
-        "Val: pick\n0.35/0.65",
-        "Test:\nconfirm",
+    ax.set_facecolor("white")
+
+    mx0, mx1 = 22, 78
+    cols = [(1, 32), (34, 66), (68, 99)]
+
+    _flow_box(ax, mx0, 90, mx1, 99.5, "CirCor DigiScope Phonocardiogram v1.0.3",
+              f"{n_all} patients · {n_rec_all} recordings")
+
+    _flow_arrow(ax, 50, 90, 50, 82)
+    _flow_arrow(ax, 50, 86.5, 79, 86.5)
+    _flow_box(ax, 80, 82.5, 100, 90.5, "Excluded",
+              f"Murmur “Unknown”\n({n_excl} patients)", fill=FLOW_EXCL)
+
+    _flow_box(ax, mx0, 73.5, mx1, 82, "Modelling cohort",
+              f"{n_cohort} patients")
+    _flow_arrow(ax, 50, 73.5, 50, 66)
+
+    _flow_box(ax, mx0 - 8, 54.5, mx1 + 8, 66, "Patient-level split (70 / 15 / 15)",
+              "Repeat visits linked by “Additional ID” and kept together\n"
+              "Stratified by clinical outcome · random seed 42")
+
+    centres = [(x0 + x1) / 2 for x0, x1 in cols]
+    ax.plot([50, 50], [54.5, 51.5], color=C_INK, lw=1.5, zorder=1)
+    ax.plot([centres[0], centres[-1]], [51.5, 51.5], color=C_INK, lw=1.5, zorder=1)
+    for (x0, x1), (name, (frame, pct)) in zip(cols, splits.items()):
+        cx = (x0 + x1) / 2
+        _flow_arrow(ax, cx, 51.5, cx, 48)
+        _flow_box(ax, x0, 37.5, x1, 48, f"{name} ({pct})",
+                  f"{frame['Patient ID'].nunique()} patients\n{len(frame)} recordings",
+                  fill=FLOW_STAGE)
+        _flow_arrow(ax, cx, 37.5, cx, 33)
+
+    _flow_box(ax, cols[0][0], 23.5, cols[-1][1], 33, "Feature extraction",
+              f"Each recording loaded at 4000 Hz · {len(mfcc_cols) // 2} MFCCs "
+              f"summarised by temporal mean and SD\n"
+              f"= {len(mfcc_cols)} features per recording")
+
+    uses = [
+        ("Fit model", "Logistic regression,\nbalanced class weights;\n"
+                      "standardisation fitted\non training data only"),
+        ("Select thresholds", "Deferral band\n0.35 / 0.65 chosen under\n"
+                              "a ≥ 50% coverage floor;\ncalibration assessed"),
+        ("Confirm, once", "Locked thresholds applied\nto held-out data;\n"
+                          "forced 0.5 rule vs deferral"),
     ]
-    xs = np.linspace(0.3, 9.7, len(steps))
-    box_w, box_h = 1.4, 0.5
-    for i, (x, label) in enumerate(zip(xs, steps)):
-        ax.add_patch(mpatches.FancyBboxPatch(
-            (x, 0.25), box_w, box_h, boxstyle="round,pad=0.02",
-            facecolor="#e8f4fc", edgecolor="#333", linewidth=1.2,
-        ))
-        ax.text(x + box_w / 2, 0.5, label, ha="center", va="center", fontsize=9)
-        if i < len(steps) - 1:
-            x_end = x + box_w
-            x_next = xs[i + 1]
-            ax.annotate(
-                "", xy=(x_next, 0.5), xytext=(x_end, 0.5),
-                arrowprops=dict(arrowstyle="->", lw=1.8, color="#333"),
-            )
-    ax.set_title("Study pipeline", fontsize=12, fontweight="bold", pad=10)
+    for (x0, x1), (head, body) in zip(cols, uses):
+        _flow_arrow(ax, (x0 + x1) / 2, 23.5, (x0 + x1) / 2, 17.5)
+        _flow_box(ax, x0, 1, x1, 17.5, head, body, fill=FLOW_STAGE)
+
+    for (xa, xb), label in (((cols[0][1], cols[1][0]), "model"),
+                            ((cols[1][1], cols[2][0]), "thresholds")):
+        _flow_arrow(ax, xa, 9.25, xb, 9.25)
+        ax.text((xa + xb) / 2, 10.6, label, ha="center", va="bottom", rotation=90,
+                fontsize=7.5, style="italic", color=C_INK, zorder=4)
+
+    ax.set_title("Study pipeline", fontsize=12.5, fontweight="bold", pad=12)
     save("fig01_pipeline_flowchart.png")
 
 
@@ -113,7 +188,6 @@ def fig02_deferral_axis() -> None:
         ))
         ax.text((x0 + x1) / 2, bar_y + bar_h / 2, label, ha="center", va="center", fontsize=9)
 
-    # One outer frame + internal dividers so end caps match interior lines.
     ax.add_patch(mpatches.Rectangle(
         (0, bar_y), 1, bar_h, fill=False, edgecolor="#333", linewidth=lw, clip_on=False,
     ))
@@ -135,7 +209,6 @@ def fig02_deferral_axis() -> None:
 
 @lru_cache(maxsize=1)
 def _murmur_model_and_probs() -> dict:
-    """Fit the primary murmur model once and cache val/test probabilities."""
     feat_train, feat_val, mfcc_cols = load_mfcc_features()
     feat_test = pd.read_csv(PROCESSED_DIR / "mfcc_features_test.csv")
     model = Pipeline([
@@ -173,7 +246,6 @@ def fig03_risk_coverage() -> None:
     ax.plot(rc["coverage"], rc["error_rate"], "-", color=C_LINE, lw=2, zorder=2)
     ax.plot(rc["coverage"], rc["error_rate"], "o", color=C_LINE, ms=5,
             mec="white", mew=1.2, zorder=3)
-    # Chosen operating point: ring it and label it directly.
     ax.plot([chosen_cov], [chosen_err], "o", ms=11, color=C_DEFER,
             mec=C_INK, mew=1.6, zorder=4)
     ax.annotate(
@@ -194,7 +266,7 @@ def fig03_risk_coverage() -> None:
 
 
 def fig04_reliability() -> None:
-    """Reliability plot + Brier score on validation, with the deferral band marked."""
+    """Reliability plot on validation."""
     _, val_prob, y_val = _murmur_model_and_probs()["val"]
     frac, mean_pred = calibration_curve(y_val, val_prob, n_bins=10, strategy="quantile")
 
@@ -240,7 +312,7 @@ def fig04_reliability() -> None:
 
 
 def fig05_confusion_test() -> None:
-    """Forced vs deferral-style confusion on test (auto decisions only for defer panel)."""
+    """Forced vs deferral confusion on test."""
     _, test_prob, y_test = _murmur_model_and_probs()["test"]
     forced_pred = (test_prob >= 0.5).astype(int)
     labels = deferral_labels(test_prob, T_LOW, T_HIGH)
@@ -251,9 +323,6 @@ def fig05_confusion_test() -> None:
     cm_forced = confusion_matrix(y_test, forced_pred)
     cm_auto = confusion_matrix(y_test[auto], defer_pred[auto])
 
-    # One sequential hue for both panels, on a shared scale, so cell darkness is
-    # comparable across them. Two different colormaps would imply a category
-    # difference that does not exist.
     vmax = max(cm_forced.max(), cm_auto.max())
 
     fig, axes = plt.subplots(1, 2, figsize=(10, 4.2))
@@ -270,7 +339,6 @@ def fig05_confusion_test() -> None:
         ax.set_title(title, fontsize=10)
         ax.grid(False)
 
-    # False negatives are the quantity of interest — ring that cell in both panels.
     for ax in axes:
         ax.add_patch(mpatches.Rectangle(
             (-0.5, 0.5), 1, 1, fill=False, edgecolor=C_MISS, linewidth=2.6, zorder=5,
@@ -283,7 +351,6 @@ def fig05_confusion_test() -> None:
 
 
 def fig06_fn_reconciliation() -> None:
-    """Decompose 51 forced FN on test."""
     _, test_prob, y_test = _murmur_model_and_probs()["test"]
     present = y_test == 1
     n_auto_fn = int((present & (test_prob < T_LOW)).sum())
@@ -300,9 +367,7 @@ def fig06_fn_reconciliation() -> None:
         "Auto-Present\n(caught)",
     ]
     vals = [n_auto_fn, n_deferred_fn, n_forced_tp_band, n_auto_tp]
-    # Three validated hues; the two deferred bars share one hue and are separated
-    # by hatching, because they are the same decision (defer) split by what the
-    # forced rule would have done.
+
     colors = [C_MISS, C_DEFER, C_DEFER, C_CATCH]
     hatches = ["", "", "///", ""]
 
@@ -315,9 +380,7 @@ def fig06_fn_reconciliation() -> None:
     ax.set_ylabel(f"True Present recordings (n = {n_present})")
     ax.set_ylim(0, max(vals) * 1.22)
     ax.set_title(
-        f"Where the {n_present} test murmurs went\n"
-        f"{n_auto_fn + n_deferred_fn} forced false negatives split into "
-        f"{n_auto_fn} automated misses and {n_deferred_fn} deferrals",
+        f"Disposition of true murmurs by decision zone (test set, n = {n_present})",
         fontweight="bold", fontsize=11,
     )
     legend = [
@@ -334,8 +397,7 @@ def fig07_murmur_outcome_crosstab() -> None:
     df = load_training_table()
     ct = pd.crosstab(df["Murmur"], df["Outcome"])
     fig, ax = plt.subplots(figsize=(5.2, 4))
-    # Single-hue sequential (magnitude), not the multi-hue YlOrRd — a rainbow ramp
-    # implies category changes across the scale that a count does not have.
+   
     sns.heatmap(ct, annot=True, fmt="d", cmap=SEQ_CMAP, ax=ax,
                 linewidths=2, linecolor="white", cbar_kws={"label": "Patients"})
     ax.set_title(

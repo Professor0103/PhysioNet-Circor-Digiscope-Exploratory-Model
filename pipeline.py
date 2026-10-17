@@ -21,7 +21,6 @@ from sklearn.metrics import classification_report, roc_auc_score
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
-# Project root on path when run from repo root
 PROJECT_ROOT = Path(__file__).resolve().parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
@@ -94,7 +93,6 @@ def run_pipeline(eval_test: bool = False) -> None:
     results_dir = PROJECT_ROOT / "results" / "tables"
     results_dir.mkdir(parents=True, exist_ok=True)
 
-    # Splits (patient-level, stratified by Outcome)
     splits_path = PROCESSED_DIR / "patient_splits.csv"
     if not splits_path.exists():
         print("Building patient splits...")
@@ -102,7 +100,6 @@ def run_pipeline(eval_test: bool = False) -> None:
     else:
         print("Using existing patient splits:", splits_path)
 
-    # Cohort: exclude Murmur Unknown (documented exclusion, n=68)
     cohort = load_modelling_cohort(exclude_unknown_murmur=True)
     print(f"Modelling cohort: {len(cohort)} patients (Unknown murmur excluded)")
 
@@ -114,13 +111,11 @@ def run_pipeline(eval_test: bool = False) -> None:
         _save_results(results_dir, {"murmur_test": summary})
         return
 
-    #MFCC features (one row per recording)
     print("Ensuring MFCC feature tables (train/val/test)...")
     features = ensure_mfcc_features(cohort)
     mfcc_cols = _mfcc_columns(features["train"])
     print(f"  train {features['train'].shape}  val {features['val'].shape}  test {features['test'].shape}")
 
-    #Murmur model: train on train, tune thresholds already frozen
     print("\nTraining murmur classifier (logistic regression + MFCCs)...")
     murmur_model = _train_classifier(features["train"][mfcc_cols], features["train"]["y"])
 
@@ -132,7 +127,6 @@ def run_pipeline(eval_test: bool = False) -> None:
         "TEST murmur", murmur_model, features["test"], mfcc_cols, "y", "Present",
     )
 
-    #Outcome extension (same features, different label)
     outcome_lookup = cohort[["Patient ID", "Outcome"]].drop_duplicates()
     for split in features:
         if "Outcome" not in features[split].columns:
