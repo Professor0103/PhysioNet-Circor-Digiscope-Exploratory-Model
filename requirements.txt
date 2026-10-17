@@ -20,5 +20,3 @@ soundfile==0.14.0
 pytest==9.1.1
 ipykernel==7.3.0
 
-# PyTorch is deliberately NOT listed. It is needed only for the optional
-# Stage 10 CNN. Adding it now would be an unnecessary dependency.
