@@ -3,13 +3,13 @@ Work completed for my medical school's Arkell Prize in Congenital Heart Disease
 
 Uncertainty-aware **decision support** for paediatric heart-sound screening using the [CirCor DigiScope](https://physionet.org/content/circor-heart-sound/1.0.3/) dataset (v1.0.3).
 
-> **Clinical boundary:** Educational research only. This system does not diagnose or exclude congenital heart disease. Auto-Absent is not proof of a normal heart.
+> **Disclaimer:** My work is for educational research only. This system does not diagnose or exclude congenital heart disease. Auto-Absent is not proof of a normal heart.
 
 ## Research question
 
 Can a model that **defers uncertain cases** (human review) reduce **false reassurance** compared with a forced binary classifier that must always answer?
 
-## Quick start
+## How to start
 
 ```bash
 python -m venv .venv
@@ -26,11 +26,11 @@ Run the full pipeline:
 .venv\Scripts\python.exe pipeline.py
 ```
 
-## Repository layout (public)
+## Repository layout
 
 | Path | Purpose |
 |---|---|
-| `pipeline.py` | Single entry point — splits, MFCCs, train, deferral eval |
+| `pipeline.py` | Training and testing splits, MFCCs, train, deferral eval |
 | `src/` | Modules: paths, splits, audio features, deferral metrics |
 | `requirements.txt` | Pinned dependencies |
 | `scripts/generate_figures.py` | Optional: build essay PNGs into local `results/figures/` |
@@ -53,4 +53,4 @@ Run the full pipeline:
 
 ## Licence & data
 
-Use CirCor under its PhysioNet terms. Raw audio not committed to this repository.
+Use CirCor under its PhysioNet terms. 
