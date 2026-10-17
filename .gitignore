@@ -1,8 +1,7 @@
-# --- Data: never commit. Raw audio and derived features are large and are
-# --- redistributable only under the dataset's own licence.
+# --- Data
 data/
 
-# --- Trained models and generated features (regenerate via pipeline.py)
+# --- Trained models and generated features 
 models/
 *.joblib
 *.pkl
@@ -14,14 +13,14 @@ __pycache__/
 *.py[cod]
 .pytest_cache/
 
-# --- Notebook checkpoints
+# --- Notebooks
 .ipynb_checkpoints/
 
-# --- Credentials
+# --- Kaggle
 kaggle.json
 .env
 
-# --- Local learning & draft materials (keep on disk, not on GitHub)
+# --- Local materials 
 notebooks/
 Documentations/
 insights/
@@ -30,11 +29,11 @@ insights/
 docs/learning_log.md
 docs/experiment_log.md
 
-# --- Kaggle kernel metadata (optional local)
+# --- Kaggle kernel metadata 
 notebooks/kernel-metadata.json
 notebooks/circor-training.ipynb
 
-# --- Generated outputs (local only — regenerate via pipeline.py / scripts/)
+# --- Generated outputs
 results/
 
 
