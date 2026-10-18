@@ -1,5 +1,5 @@
-# When Should an AI Stethoscope Ask for Help?
-Work completed for my medical school's Arkell Prize in Congenital Heart Disease
+# Should AI-assisted Auscultation Diagnose or Defer in Congenital Heart Disease in Low-Resource Settings?
+Work completed for my medical school's Arkell Prize in Congenital Heart Disease 
 
 Uncertainty-aware **decision support** for paediatric heart-sound screening using the [CirCor DigiScope](https://physionet.org/content/circor-heart-sound/1.0.3/) dataset (v1.0.3).
 
@@ -7,7 +7,7 @@ Uncertainty-aware **decision support** for paediatric heart-sound screening usin
 
 ## Research question
 
-Can a model that **defers uncertain cases** (human review) reduce **false reassurance** compared with a forced binary classifier that must always answer?
+Can a model that **defers uncertain cases** (to expert review) reduce **false reassurance** compared with a forced binary classifier that must always answer?
 
 ## How to start
 
@@ -33,7 +33,7 @@ Run the full pipeline:
 | `pipeline.py` | Training and testing splits, MFCCs, train, deferral eval |
 | `src/` | Modules: paths, splits, audio features, deferral metrics |
 | `requirements.txt` | Pinned dependencies |
-| `scripts/generate_figures.py` | Optional: build essay PNGs into local `results/figures/` |
+| `scripts/generate_figures.py` | To generate figures locally | 
 
 ## Method summary
 
@@ -41,8 +41,8 @@ Run the full pipeline:
 - **Label:** Murmur Present vs Absent (68 Unknown excluded)
 - **Features:** 40 MFCC summaries per recording (4000 Hz)
 - **Model:** Logistic regression (`class_weight=balanced`)
-- **Deferral:** auto-Absent if prob < 0.35; auto-Present if prob > 0.65; else defer
-- **Thresholds:** selected on validation; test evaluation is confirmatory (single run)
+- **Deferral:** auto-Absent if prob < 0.35 and auto-Present if prob > 0.65 and if not then defer
+- **Thresholds:** selected on validation (single run) 
 
 ## Key test result (murmur)
 
